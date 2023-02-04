@@ -16,7 +16,6 @@ class ApiTest extends TestCase
     public function test_the_validate_route_returns_ok()
     {
         $response = $this->get('login');
-
         $response->assertStatus(200);
     }
 
@@ -40,7 +39,13 @@ class ApiTest extends TestCase
     {
         $response = $this->withHeaders([
             'X-Header' => 'Value',
-        ])->post('http://127.0.0.1:8000/api/v1/login', ['username' => 'edisao', 'password' => 'solibann2012']);
+        ])->post(
+            'http://127.0.0.1:8000/api/v1/login',
+            [
+                'username' => 'cuenta_usuario',
+                'password' => 'Pass0wrD'
+            ]
+        );
         $response->assertOk();
     }
 }
