@@ -3,16 +3,19 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Http\Controllers\Api\ApiController;
 use App\Helpers\Constants;
 use App\Libraries\AuthUtil;
-use App\Models\{Usuario};
+use App\Models\{Usuario, User, Parametro};
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Str;
+use PHPOpenSourceSaver\JWTAuth\Facades\JWTAuth;
+use PHPOpenSourceSaver\JWTAuth\Exceptions\JWTException;
 
-class AuthController extends Controller
+class AuthController extends ApiController
 {
     protected $constants;
 
@@ -160,5 +163,113 @@ class AuthController extends Controller
         $authUtil = new AuthUtil();
         $authUtil->removeSession();
         return redirect()->route('login');
+    }
+
+    public function getToken(Request $request)
+    {
+        // validacion de los parametros de entrada
+        $validator = Validator::make($request->all(), [
+            'username' => 'required',
+            'password' => ['required'],
+        ]);
+        if ($validator->fails()) {
+            return response()->json(['error' => $validator->errors()], 401);
+        }
+
+        // Continua la validacion del Request
+        // Obtenemos las credenciales del usuario a ingresar
+        $credentials = request(['username', 'password']);
+
+        // Obtiene los datos del usuario (FALTA validar el password)
+        $userLogin = User::getUserByUsername($request->username);
+
+        if (isset($userLogin)) {
+            $userId = $userLogin->id;
+            if (password_verify($request->password, $userLogin->password)) {
+                if ($userLogin->enabled) {
+                    if (isset($userLogin->rol_principal_id)) {
+                        if (isset($userLogin->sitio_principal_id)) {
+                            $personId = $userLogin->persona_id;
+                            $rolPrincipalId = $userLogin->rol_principal_id;
+                            $sitioPrincipalId = $userLogin->sitio_principal_id;
+                            $nombres = $userLogin->persona_nombres;
+                            $apellidos = $userLogin->persona_apellidos;
+                            $mailPrincipal = $userLogin->mail_principal;
+                            $rolPrincipal = $userLogin->rol_nombre;
+                            $sitioPrincipal = $userLogin->sitio_nombre;
+                            $sitioSelector = $userLogin->sitio_selector;
+                            $imagenAvatar = $userLogin->imagen_avatar;
+                            $selector = $userLogin->selector;
+                            // Usuario validado correctamente
+                            // puede acceder al sitio
+                            $resultCode = 0;
+                            $resultDescription = trans('msg.msgUsuarioLoginOk');
+                        } else {
+                            $resultCode = 7;
+                            $resultDescription = trans('msg.errUsuarioSinSitio');
+                        }
+                    } else {
+                        $resultCode = 6;
+                        $resultDescription = trans('msg.errUsuarioSinRol');
+                    }
+                } else {
+                    $resultCode = 3;
+                    $resultDescription = trans('msg.errUsuarioInactivo');
+                }
+            } else {
+                $resultCode = 2;
+                $resultDescription = trans('msg.errUsuarioPasswordIncorrecto');
+            }
+        } else {
+            // Username no existe
+            $resultCode = 1;
+            $resultDescription = trans('msg.errUsuarioNoExiste');
+        }
+
+
+        //return $resultCode . ' ' . $resultDescription;
+        if ($resultCode == 0) {
+            // Obtiene el parametro configurado para el tiempo EXP del token
+            $minJwtExpParam = Parametro::getValueParametroByCode('JWT_API_MIN_EXP');
+
+            $myTTL = ($minJwtExpParam != 0) ? $minJwtExpParam : Config::get('microtess.jwt_token.exp'); //minutes
+            JWTAuth::factory()->setTTL($myTTL);
+
+            //Log::channel($this->constants->channelLogApi)->info("Login: " . $request->username . '. JWT Generated.' . ' REQUEST: ' . json_encode($request->all()));
+
+            // Genera el token
+            $jwt_token = JWTAuth::fromUser($userLogin);
+            /*
+            $tokenParts = explode(".", $jwt_token);  
+            $tokenHeader = base64_decode($tokenParts[0]);
+            $tokenPayload = base64_decode($tokenParts[1]);
+            $jwtHeader = json_decode($tokenHeader);
+            $jwtPayload = json_decode($tokenPayload);
+            */
+            return $this->successResponse([
+                'token' => $jwt_token,
+                //'token_expired' => Carbon::createFromTimestamp($jwtPayload->exp),
+                'token_type' => 'bearer'
+            ], $resultDescription);
+
+            /*
+            return response()->json([
+                'success' => true,
+                'message' => "Login ok",
+                'token' => $jwt_token,
+                'token_type' => 'bearer'
+            ]);
+            */
+        } else {
+            return $this->errorResponse($resultDescription, 401, null);
+            /*
+            return response()->json([
+                'success' => false,
+                'message' => $resultDescription,
+                'token' => null,
+                'token_type' => null
+            ]);
+            */
+        }
     }
 }

@@ -2,23 +2,25 @@
 
 namespace Tests\Feature;
 
-// use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
 
-class ExampleTest extends TestCase
+class ApiTest extends TestCase
 {
     /**
-     * A basic test example.
+     * A basic feature test example.
      *
      * @return void
      */
-    public function test_the_application_returns_a_successful_response()
+    public function test_the_validate_route_returns_ok()
     {
         $response = $this->get('login');
+
         $response->assertStatus(200);
     }
 
-    public function test_the_validate_data_returns_a_bad_request()
+    public function test_the_validate_data_returns_bad_request()
     {
         $response = $this->withHeaders([
             'X-Header' => 'Value',
@@ -31,6 +33,14 @@ class ExampleTest extends TestCase
         $response = $this->withHeaders([
             'X-Header' => 'Value',
         ])->post('http://127.0.0.1:8000/api/v1/service/iot', ['trama' => 'S:SENSOR001;T:19;H:42']);
+        $response->assertOk();
+    }
+
+    public function test_get_token_returns_ok_response()
+    {
+        $response = $this->withHeaders([
+            'X-Header' => 'Value',
+        ])->post('http://127.0.0.1:8000/api/v1/login', ['username' => 'edisao', 'password' => 'solibann2012']);
         $response->assertOk();
     }
 }

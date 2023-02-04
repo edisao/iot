@@ -50,6 +50,18 @@ class Parametro extends Model
 		'enabled'
 	];
 
+	public static function getValueParametroByCode($parameterCode)
+	{
+		$response = 0;
+		$data = Parametro::query()
+			->select('id', 'codigo', 'nombre', 'valor', 'descripcion', 'enabled')
+			->where('codigo', $parameterCode)
+			->first();
+		if (isset($data))
+			$response = $data->valor;
+		return $response;
+	}
+
 	public static function getParametroByCode($parameterCode)
 	{
 		$authUtil = new AuthUtil();
