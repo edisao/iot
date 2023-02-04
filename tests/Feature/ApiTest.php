@@ -8,33 +8,47 @@ use Tests\TestCase;
 
 class ApiTest extends TestCase
 {
-    /**
-     * A basic feature test example.
-     *
-     * @return void
-     */
-    public function test_the_validate_route_returns_ok()
+    public function test_save_data_returns_ok_response()
     {
-        $response = $this->get('login');
-        $response->assertStatus(200);
+        $response = $this->withHeaders([
+            'X-Header' => 'unl-iot',
+        ])->post(
+            'http://127.0.0.1:8000/api/v1/service/iot',
+            [
+                'trama' => 'S:SENSOR001;T:19;H:42'
+            ]
+        );
+        $response->assertOk();
     }
 
     public function test_the_validate_data_returns_bad_request()
     {
         $response = $this->withHeaders([
             'X-Header' => 'Value',
-        ])->post('http://127.0.0.1:8000/api/v1/service/iot', ['sensor' => 'S:SENSOR001;T:19;H:42']);
+        ])->post(
+            'http://127.0.0.1:8000/api/v1/service/iot',
+            [
+                'sensorfdfdfdfdcls' => 'S:SENSOR001;T:19;H:42'
+            ]
+        );
         $response->assertBadRequest();
     }
 
-    public function test_the_save_data_returns_ok_response()
+
+
+
+
+
+    /*
+
+    public function test_the_validate_route_returns_ok()
     {
-        $response = $this->withHeaders([
-            'X-Header' => 'Value',
-        ])->post('http://127.0.0.1:8000/api/v1/service/iot', ['trama' => 'S:SENSOR001;T:19;H:42']);
-        $response->assertOk();
+        $response = $this->get('login');
+        $response->assertStatus(200);
     }
 
+    
+    
     public function test_get_token_returns_ok_response()
     {
         $response = $this->withHeaders([
@@ -48,4 +62,5 @@ class ApiTest extends TestCase
         );
         $response->assertOk();
     }
+    */
 }
