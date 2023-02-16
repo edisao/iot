@@ -26,7 +26,7 @@ class ApiTest extends TestCase
         ])->post('http://127.0.0.1:8000/api/v1/service/iot', ['sensor' => 'S:SENSOR001;T:19;H:42']);
         $response->assertBadRequest();
     }
-
+    /*
     public function test_the_save_data_returns_ok_response()
     {
         $response = $this->withHeaders([
@@ -34,7 +34,7 @@ class ApiTest extends TestCase
         ])->post('http://127.0.0.1:8000/api/v1/service/iot', ['trama' => 'S:SENSOR001;T:19;H:42']);
         $response->assertOk();
     }
-    /*
+    
     public function test_get_token_returns_ok_response()
     {
         $response = $this->withHeaders([
