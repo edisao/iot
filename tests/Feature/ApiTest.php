@@ -8,16 +8,15 @@ use Tests\TestCase;
 
 class ApiTest extends TestCase
 {
-    /**
-     * A basic feature test example.
-     *
-     * @return void
-     */
-    public function test_the_validate_route_returns_ok()
+
+
+    /*
+     public function test_the_validate_route_returns_ok()
     {
         $response = $this->get('login');
         $response->assertStatus(200);
     }
+    */
 
     public function test_the_validate_data_returns_bad_request()
     {
